@@ -1,0 +1,17 @@
+feature,importance_mean,importance_std
+Iron,0.32112,0.02484909835162814
+Vitamin_B12,0.18399999999999997,0.014846796886122572
+Age,0.0,0.0
+Height,0.0,0.0
+Weight,0.0,0.0
+BMI_calc,0.0,0.0
+Vitamin_D,0.0,0.0
+Calcium,0.0,0.0
+Omega_3,0.0,0.0
+Zinc,0.0,0.0
+Magnesium,0.0,0.0
+Protein,0.0,0.0
+Gender,0.0,0.0
+Physical_Activity,0.0,0.0
+Diet_Quality,0.0,0.0
+BMI_Category,0.0,0.0

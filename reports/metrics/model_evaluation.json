@@ -1,0 +1,342 @@
+{
+  "dataset_rows": 1000,
+  "random_state": 42,
+  "targets": {
+    "Anemia": {
+      "status": "trained",
+      "metrics": {
+        "selected_model": "RandomForest",
+        "test_rows": 200,
+        "positive_rate_test": 0.375,
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "roc_auc": 1.0,
+        "pr_auc": 1.0,
+        "brier_score": 0.021572556419970378,
+        "threshold": 0.5,
+        "cv_models": [
+          {
+            "model": "DummyPrior",
+            "cv_roc_auc_mean": 0.5,
+            "cv_roc_auc_std": 0.0,
+            "cv_pr_auc_mean": 0.37625000000000003,
+            "cv_f1_mean": 0.0
+          },
+          {
+            "model": "LogisticRegression",
+            "cv_roc_auc_mean": 0.8931211955621791,
+            "cv_roc_auc_std": 0.026510484570262154,
+            "cv_pr_auc_mean": 0.8423017974785664,
+            "cv_f1_mean": 0.7443747388049646
+          },
+          {
+            "model": "RandomForest",
+            "cv_roc_auc_mean": 1.0,
+            "cv_roc_auc_std": 0.0,
+            "cv_pr_auc_mean": 1.0,
+            "cv_f1_mean": 1.0
+          },
+          {
+            "model": "ExtraTrees",
+            "cv_roc_auc_mean": 0.9736241099519788,
+            "cv_roc_auc_std": 0.011003216861686364,
+            "cv_pr_auc_mean": 0.9595843884596006,
+            "cv_f1_mean": 0.8808286252354047
+          },
+          {
+            "model": "HistGradientBoosting",
+            "cv_roc_auc_mean": 1.0,
+            "cv_roc_auc_std": 0.0,
+            "cv_pr_auc_mean": 1.0,
+            "cv_f1_mean": 0.996666435169109
+          }
+        ],
+        "classification_report": {
+          "0": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 125.0
+          },
+          "1": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 75.0
+          },
+          "accuracy": 1.0,
+          "macro avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 200.0
+          },
+          "weighted avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 200.0
+          }
+        }
+      },
+      "test_class_counts": {
+        "0": 125,
+        "1": 75
+      }
+    },
+    "Osteoporosis": {
+      "status": "trained",
+      "metrics": {
+        "selected_model": "RandomForest",
+        "test_rows": 200,
+        "positive_rate_test": 0.495,
+        "accuracy": 0.995,
+        "precision": 0.99,
+        "recall": 1.0,
+        "f1": 0.9949748743718593,
+        "roc_auc": 1.0,
+        "pr_auc": 1.0,
+        "brier_score": 0.027226165306600148,
+        "threshold": 0.5,
+        "cv_models": [
+          {
+            "model": "DummyPrior",
+            "cv_roc_auc_mean": 0.5,
+            "cv_roc_auc_std": 0.0,
+            "cv_pr_auc_mean": 0.49624999999999997,
+            "cv_f1_mean": 0.0
+          },
+          {
+            "model": "LogisticRegression",
+            "cv_roc_auc_mean": 0.9326495595014845,
+            "cv_roc_auc_std": 0.014331534450876211,
+            "cv_pr_auc_mean": 0.9374012899187211,
+            "cv_f1_mean": 0.8401822449104696
+          },
+          {
+            "model": "RandomForest",
+            "cv_roc_auc_mean": 1.0,
+            "cv_roc_auc_std": 0.0,
+            "cv_pr_auc_mean": 1.0,
+            "cv_f1_mean": 0.9987421383647799
+          },
+          {
+            "model": "ExtraTrees",
+            "cv_roc_auc_mean": 0.9858112595718082,
+            "cv_roc_auc_std": 0.0026225712571939955,
+            "cv_pr_auc_mean": 0.9856154472360744,
+            "cv_f1_mean": 0.9410394276636316
+          },
+          {
+            "model": "HistGradientBoosting",
+            "cv_roc_auc_mean": 0.9986091576808876,
+            "cv_roc_auc_std": 0.002781684638224702,
+            "cv_pr_auc_mean": 0.997318708431667,
+            "cv_f1_mean": 0.9987421383647799
+          }
+        ],
+        "classification_report": {
+          "0": {
+            "precision": 1.0,
+            "recall": 0.9900990099009901,
+            "f1-score": 0.9950248756218906,
+            "support": 101.0
+          },
+          "1": {
+            "precision": 0.99,
+            "recall": 1.0,
+            "f1-score": 0.9949748743718593,
+            "support": 99.0
+          },
+          "accuracy": 0.995,
+          "macro avg": {
+            "precision": 0.995,
+            "recall": 0.995049504950495,
+            "f1-score": 0.9949998749968749,
+            "support": 200.0
+          },
+          "weighted avg": {
+            "precision": 0.99505,
+            "recall": 0.995,
+            "f1-score": 0.9950001250031251,
+            "support": 200.0
+          }
+        }
+      },
+      "test_class_counts": {
+        "0": 101,
+        "1": 99
+      }
+    },
+    "Diabetes": {
+      "status": "trained",
+      "metrics": {
+        "selected_model": "RandomForest",
+        "test_rows": 200,
+        "positive_rate_test": 0.445,
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "roc_auc": 1.0,
+        "pr_auc": 1.0,
+        "brier_score": 0.004223022123381931,
+        "threshold": 0.5,
+        "cv_models": [
+          {
+            "model": "DummyPrior",
+            "cv_roc_auc_mean": 0.5,
+            "cv_roc_auc_std": 0.0,
+            "cv_pr_auc_mean": 0.44750000000000006,
+            "cv_f1_mean": 0.0
+          },
+          {
+            "model": "LogisticRegression",
+            "cv_roc_auc_mean": 0.9982949450191103,
+            "cv_roc_auc_std": 0.00208256681864678,
+            "cv_pr_auc_mean": 0.9978152601704187,
+            "cv_f1_mean": 0.9765478081286727
+          },
+          {
+            "model": "RandomForest",
+            "cv_roc_auc_mean": 1.0,
+            "cv_roc_auc_std": 0.0,
+            "cv_pr_auc_mean": 1.0,
+            "cv_f1_mean": 1.0
+          },
+          {
+            "model": "ExtraTrees",
+            "cv_roc_auc_mean": 0.997916072219265,
+            "cv_roc_auc_std": 0.0024637990926312174,
+            "cv_pr_auc_mean": 0.9972462344555112,
+            "cv_f1_mean": 0.9674750219333152
+          },
+          {
+            "model": "HistGradientBoosting",
+            "cv_roc_auc_mean": 1.0,
+            "cv_roc_auc_std": 4.965068306494546e-17,
+            "cv_pr_auc_mean": 1.0,
+            "cv_f1_mean": 1.0
+          }
+        ],
+        "classification_report": {
+          "0": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 111.0
+          },
+          "1": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 89.0
+          },
+          "accuracy": 1.0,
+          "macro avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 200.0
+          },
+          "weighted avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 200.0
+          }
+        }
+      },
+      "test_class_counts": {
+        "0": 111,
+        "1": 89
+      }
+    },
+    "Cardio": {
+      "status": "trained",
+      "metrics": {
+        "selected_model": "RandomForest",
+        "test_rows": 200,
+        "positive_rate_test": 0.13,
+        "accuracy": 0.99,
+        "precision": 1.0,
+        "recall": 0.9230769230769231,
+        "f1": 0.96,
+        "roc_auc": 1.0,
+        "pr_auc": 1.0,
+        "brier_score": 0.011833256979245652,
+        "threshold": 0.5,
+        "cv_models": [
+          {
+            "model": "DummyPrior",
+            "cv_roc_auc_mean": 0.5,
+            "cv_roc_auc_std": 0.0,
+            "cv_pr_auc_mean": 0.12999999999999998,
+            "cv_f1_mean": 0.0
+          },
+          {
+            "model": "LogisticRegression",
+            "cv_roc_auc_mean": 0.9813170606372046,
+            "cv_roc_auc_std": 0.005359931373797666,
+            "cv_pr_auc_mean": 0.8857812224003705,
+            "cv_f1_mean": 0.770783917607447
+          },
+          {
+            "model": "RandomForest",
+            "cv_roc_auc_mean": 1.0,
+            "cv_roc_auc_std": 0.0,
+            "cv_pr_auc_mean": 1.0000000000000002,
+            "cv_f1_mean": 0.9851156973108193
+          },
+          {
+            "model": "ExtraTrees",
+            "cv_roc_auc_mean": 0.9882312435765673,
+            "cv_roc_auc_std": 0.005667616762647724,
+            "cv_pr_auc_mean": 0.9319417705634194,
+            "cv_f1_mean": 0.8327376077753635
+          },
+          {
+            "model": "HistGradientBoosting",
+            "cv_roc_auc_mean": 0.996930027406646,
+            "cv_roc_auc_std": 0.0060546628772143035,
+            "cv_pr_auc_mean": 0.9918398268398269,
+            "cv_f1_mean": 0.9902206320810972
+          }
+        ],
+        "classification_report": {
+          "0": {
+            "precision": 0.9886363636363636,
+            "recall": 1.0,
+            "f1-score": 0.9942857142857143,
+            "support": 174.0
+          },
+          "1": {
+            "precision": 1.0,
+            "recall": 0.9230769230769231,
+            "f1-score": 0.96,
+            "support": 26.0
+          },
+          "accuracy": 0.99,
+          "macro avg": {
+            "precision": 0.9943181818181819,
+            "recall": 0.9615384615384616,
+            "f1-score": 0.9771428571428571,
+            "support": 200.0
+          },
+          "weighted avg": {
+            "precision": 0.9901136363636364,
+            "recall": 0.99,
+            "f1-score": 0.9898285714285716,
+            "support": 200.0
+          }
+        }
+      },
+      "test_class_counts": {
+        "0": 174,
+        "1": 26
+      }
+    }
+  }
+}

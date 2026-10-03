@@ -1,0 +1,55 @@
+{
+  "shape": [
+    1000,
+    22
+  ],
+  "columns": [
+    "Age",
+    "Gender",
+    "Height",
+    "Weight",
+    "BMI",
+    "Physical_Activity",
+    "Diet_Quality",
+    "Vitamin_D",
+    "Iron",
+    "Calcium",
+    "Vitamin_B12",
+    "Omega_3",
+    "Zinc",
+    "Magnesium",
+    "Protein",
+    "VitD_Status",
+    "Iron_Status",
+    "Calcium_Status",
+    "Anemia",
+    "Osteoporosis",
+    "Diabetes",
+    "Cardio"
+  ],
+  "missing_cells": 0,
+  "duplicate_rows": 0,
+  "targets": {
+    "Anemia": {
+      "0": 624,
+      "1": 376
+    },
+    "Osteoporosis": {
+      "0": 504,
+      "1": 496
+    },
+    "Diabetes": {
+      "0": 553,
+      "1": 447
+    },
+    "Cardio": {
+      "0": 870,
+      "1": 130
+    }
+  },
+  "warnings": [
+    "Dataset provenance, consent/license, and clinical label-generation method were not independently verified.",
+    "Nutrient status summary columns are excluded from modeling to reduce possible target leakage.",
+    "Small structured dataset; results may not generalize to real populations."
+  ]
+}

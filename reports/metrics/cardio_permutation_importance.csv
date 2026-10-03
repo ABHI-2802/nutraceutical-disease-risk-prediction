@@ -1,0 +1,17 @@
+feature,importance_mean,importance_std
+Omega_3,0.18879862953138815,0.02157620565923321
+BMI_calc,0.03069739168877099,0.009367933380312693
+BMI_Category,0.00044208664898325034,0.00022104332449160435
+Weight,0.00011052166224581605,0.00022104332449161823
+Age,0.0,0.0
+Height,0.0,0.0
+Vitamin_D,0.0,0.0
+Iron,0.0,0.0
+Calcium,0.0,0.0
+Vitamin_B12,0.0,0.0
+Zinc,0.0,0.0
+Magnesium,0.0,0.0
+Protein,0.0,0.0
+Gender,0.0,0.0
+Physical_Activity,0.0,0.0
+Diet_Quality,0.0,0.0
