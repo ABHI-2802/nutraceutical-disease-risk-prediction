@@ -1,60 +1,144 @@
 # Nutraceutical-Based Multi-Disease Risk Prediction
 
-An end-to-end educational ML project that estimates dataset-pattern risk scores for **Anemia, Osteoporosis, Type 2 Diabetes, and Cardiovascular disease** from demographic, anthropometric, lifestyle, and nutrient-intake features.
+An end-to-end educational machine learning pipeline and interactive Streamlit web application that estimates dataset-pattern risk scores for **Anemia, Osteoporosis, Type 2 Diabetes, and Cardiovascular Disease** from demographic, anthropometric, lifestyle, and nutrient-intake features.
 
-> **Important:** This is a research/demo model, not a diagnostic or clinical decision tool. Predictions reflect patterns in the supplied dataset and must not be used to diagnose, treat, or rule out disease. The dataset's provenance and label-generation process must be independently verified before any scientific or clinical claim.
+> ⚠️ **Important Disclaimer:** This repository is an educational research and portfolio prototype. Predictions reflect patterns present within the supplied dataset and **must not be used to diagnose, treat, or rule out disease**. The dataset's provenance and label-generation process should be independently verified prior to any scientific or clinical application.
 
-## What is included
-- Data audit and target/feature checks
-- Leakage-conscious preprocessing and feature engineering
-- Separate binary classifier for each of the four outcomes
-- Stratified holdout test set + cross-validation on training data
-- Accuracy, precision, recall, F1, ROC-AUC, PR-AUC, confusion matrices, ROC/PR curves
-- Baseline and tree-based model comparison
-- Feature permutation importance, serialized pipelines, Streamlit app
-- SQL schema/queries, smoke tests, limitations and reproducibility instructions
+---
 
-## Dataset audit caveat
-The supplied CSV has 1,000 rows, 22 columns, no missing cells, and no exact duplicate rows at initial inspection. Target counts are written to `reports/metrics/data_audit.json` when the audit runs. Nutrient status fields (`VitD_Status`, `Iron_Status`, `Calcium_Status`) are excluded from predictors because they are deterministic/derived summaries that may reveal label construction. All four disease labels are retained as separate targets. The dataset is small and appears highly structured; high scores must not be interpreted as clinical validity. Check source, consent/license, label definitions, and whether labels were rule-generated before publishing results.
+## 📊 Comprehensive Model Performance & Evaluation Metrics
 
-## Quick start (Mac/Linux)
+All models were evaluated on a strict **200-row (20%) stratified holdout test set** that was completely isolated from feature processing and model selection. Prior to holdout evaluation, candidates were compared using **5-Fold Cross-Validation** on the 800-row training set.
+
+### 1. Final Holdout Test Set Evaluation (N = 200)
+
+| Disease Target | Selected Model | Test Set Positive Rate | Accuracy | Precision | Recall | F1-Score | ROC-AUC | PR-AUC | Brier Score |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Anemia** | `RandomForest` | 37.5% (75 / 200) | **100.0%** (1.000) | 1.000 | 1.000 | **1.000** | **1.000** | 1.000 | 0.0216 |
+| **Osteoporosis** | `RandomForest` | 49.5% (99 / 200) | **99.5%** (0.995) | 0.990 | 1.000 | **0.995** | **1.000** | 1.000 | 0.0272 |
+| **Type 2 Diabetes** | `RandomForest` | 44.5% (89 / 200) | **100.0%** (1.000) | 1.000 | 1.000 | **1.000** | **1.000** | 1.000 | 0.0042 |
+| **Cardiovascular** | `RandomForest` | 13.0% (26 / 200) | **99.0%** (0.990) | 1.000 | 0.923 | **0.960** | **1.000** | 1.000 | 0.0118 |
+
+---
+
+### 2. 5-Fold Cross-Validation Model Comparison (Mean ROC-AUC ± Std)
+
+During model exploration, 5 distinct algorithms were benchmarked across the training set (`N = 800`). `RandomForest` achieved top performance across all targets.
+
+| Candidate Model | Anemia CV ROC-AUC | Osteoporosis CV ROC-AUC | Diabetes CV ROC-AUC | Cardio CV ROC-AUC |
+| :--- | :---: | :---: | :---: | :---: |
+| **DummyPrior (Baseline)** | 0.500 ± 0.000 | 0.500 ± 0.000 | 0.500 ± 0.000 | 0.500 ± 0.000 |
+| **Logistic Regression** | 0.893 ± 0.027 | 0.933 ± 0.014 | 0.998 ± 0.002 | 0.981 ± 0.005 |
+| **ExtraTrees** | 0.974 ± 0.011 | 0.986 ± 0.003 | 0.998 ± 0.002 | 0.988 ± 0.006 |
+| **HistGradientBoosting** | 1.000 ± 0.000 | 0.999 ± 0.003 | 1.000 ± 0.000 | 0.997 ± 0.006 |
+| **RandomForest (Selected)** | **1.000 ± 0.000** | **1.000 ± 0.000** | **1.000 ± 0.000** | **1.000 ± 0.000** |
+
+---
+
+### 3. Top Key Permutation Feature Importance
+
+Permutation importance highlights the most influential predictor variables for each disease target:
+
+- **Anemia**: `Iron` (+0.321 mean importance drop), `Vitamin_B12` (+0.184)
+- **Osteoporosis**: `Calcium` (+0.393 mean importance drop), `Vitamin_D` (+0.175)
+- **Type 2 Diabetes**: `BMI_calc` (+0.143 mean importance drop), `BMI_Category` (+0.0002)
+- **Cardiovascular Disease**: `Omega_3` (+0.189 mean importance drop), `BMI_calc` (+0.031)
+
+---
+
+## 📈 Dataset Audit Summary
+
+- **Total Sample Size:** 1,000 rows × 22 columns
+- **Missing Values:** 0 null cells across all columns
+- **Exact Duplicates:** 0 duplicate rows
+- **Target Distribution (Full Dataset N=1,000):**
+  - **Anemia:** 376 positive (37.6%), 624 negative (62.4%)
+  - **Osteoporosis:** 496 positive (49.6%), 504 negative (50.4%)
+  - **Diabetes:** 447 positive (44.7%), 553 negative (553.3%)
+  - **Cardiovascular:** 130 positive (13.0%), 870 negative (87.0%)
+- **Data Safeguards:** Deterministic nutrient status summary fields (`VitD_Status`, `Iron_Status`, `Calcium_Status`) and other target disease labels are strictly excluded from predictor matrices to prevent data leakage.
+
+---
+
+## 🚀 How to Deploy on Render (Step-by-Step)
+
+You can host this application live on **Render** (free web service tier) so it can be accessed from any device (phone, laptop, tablet).
+
+### Option 1: Direct Deployment via Render Dashboard (Recommended)
+
+1. Sign up or log into **[Render.com](https://render.com/)**.
+2. Click **New +** → Select **Web Service**.
+3. Connect your GitHub account and select the repository:
+   `ABHI-2802/nutraceutical-disease-risk-prediction`
+4. Configure the Web Service settings:
+   - **Name:** `nutraceutical-risk-prediction`
+   - **Region:** Choose closest region (e.g., Singapore, Frankfurt, Oregon)
+   - **Branch:** `main`
+   - **Runtime:** `Python 3`
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:**
+     ```bash
+     streamlit run app.py --server.port $PORT --server.address 0.0.0.0
+     ```
+   - **Instance Type:** Free
+5. Click **Deploy Web Service**.
+
+### Option 2: Render Blueprint Deployment
+
+This repository includes a pre-configured `render.yaml` file.
+1. On Render, click **New +** → Select **Blueprint**.
+2. Select `ABHI-2802/nutraceutical-disease-risk-prediction`.
+3. Render will automatically read `render.yaml` and provision the Web Service.
+
+Once deployed, Render provides a public HTTPS link (e.g., `https://nutraceutical-risk-prediction.onrender.com`) that works on **any device, anywhere in the world**.
+
+---
+
+## 💻 Local Quick Start (Mac/Linux)
+
 ```bash
-cd Nutraceutical_Disease_Risk_Prediction
+# 1. Clone the repository
+git clone https://github.com/ABHI-2802/nutraceutical-disease-risk-prediction.git
+cd nutraceutical-disease-risk-prediction
+
+# 2. Create and activate virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
+
+# 3. Install exact requirements
 pip install -r requirements.txt
+
+# 4. Train models and generate metrics
 python -m src.train
+
+# 5. Launch Streamlit app
 streamlit run app.py
 ```
-Training creates fitted pipelines under `models/` and reports under `reports/`. Run training before launching the app.
 
-## Methodology
-1. The four labels are modeled independently; each row can have multiple positive labels.
-2. The target column and all other disease-label columns are excluded from the feature matrix for that target.
-3. Nutrient status summary columns are excluded from predictors to reduce direct target-rule leakage.
-4. BMI is recalculated from height and weight where valid. Raw BMI is not used as a predictor; the calculated BMI is.
-5. A stratified 80/20 split is made once per target. Hyperparameters are not tuned on the test set. Cross-validation occurs only on the training portion.
-6. Candidate models: DummyClassifier (reference), Logistic Regression, Random Forest, HistGradientBoosting. Models are compared by mean training-CV ROC-AUC where defined; the holdout test set is evaluated once for the selected candidate.
-7. For imbalanced labels, PR-AUC and recall are reported alongside ROC-AUC and accuracy. Threshold 0.5 is used for the primary reported confusion matrix; it is not claimed to be clinically optimal.
+---
 
-## Feature set
-Age, gender, height, weight, physical activity, diet quality, nutrient intakes (Vitamin D, Iron, Calcium, B12, Omega-3, Zinc, Magnesium, Protein), and engineered BMI/BMI category. Status fields and other disease labels are never predictors.
+## 📁 Project Structure
 
-## Project structure
 ```text
-data/raw/             supplied dataset
-src/                  audit, training, shared pipeline
-models/               fitted pipelines and metadata (generated)
-reports/metrics/      audit + evaluation metrics (generated)
-reports/figures/      diagnostic plots (generated)
-sql/                  database schema and example queries
-tests/                lightweight checks
-app.py                Streamlit demo
+├── data/
+│   └── raw/                   Raw dataset (1,000 rows × 22 columns)
+├── models/                    Serialized scikit-learn pipeline artifacts (.joblib)
+├── reports/
+│   ├── figures/               Confusion matrices, ROC, and PR curves
+│   └── metrics/               Model evaluations, CV benchmarks, data audit JSONs
+├── src/
+│   ├── audit.py               Data quality audit module
+│   ├── pipeline.py            Preprocessing and model architecture definitions
+│   └── train.py               Model training and cross-validation execution
+├── app.py                     Interactive Streamlit web application
+├── render.yaml                Render deployment blueprint configuration
+├── requirements.txt           Pinned Python dependency specifications
+└── README.md                  Project documentation & empirical metrics
 ```
 
-## Responsible interpretation
-- Do not claim this predicts real-world disease risk unless labels are clinically validated and the model is externally validated.
-- Do not report accuracy alone. Discuss class imbalance, sensitivity/recall, precision, PR-AUC, calibration, and confidence intervals if appropriate.
-- The input features do not include clinical measurements such as blood counts, bone density, glucose/HbA1c, blood pressure, or lipid profile; therefore this project cannot establish clinical diagnosis.
-- For CV, describe this as a prototype built on a supplied structured dataset, and state its limitations transparently.
+---
+
+## 🔬 Responsible Interpretation & Limitations
+
+- **Dataset Constraints:** The model was trained on a small, highly structured 1,000-row synthetic/demo dataset. Perfect or near-perfect evaluation scores (e.g. 100% accuracy) reflect dataset structure rather than clinical real-world performance.
+- **Clinical Relevance:** Input features do not include diagnostic lab values (e.g., serum ferritin, bone mineral density, HbA1c, lipid panel). This application is strictly an educational ML prototype.
