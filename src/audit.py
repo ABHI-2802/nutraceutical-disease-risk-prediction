@@ -5,8 +5,10 @@ from src.pipeline import TARGETS
 
 ROOT = Path(__file__).resolve().parents[1]
 
-def run_audit():
-    df = pd.read_csv(ROOT / "data/raw/disease_risk_dataset.csv")
+def run_audit(csv_path=None):
+    if csv_path is None:
+        csv_path = ROOT / "data/raw/disease_risk_dataset.csv"
+    df = pd.read_csv(csv_path)
     out = {"shape": list(df.shape), "columns": list(df.columns), "missing_cells": int(df.isna().sum().sum()), "duplicate_rows": int(df.duplicated().sum()), "targets": {}, "warnings": []}
     for t in TARGETS:
         if t not in df: raise ValueError(f"Required target missing: {t}")

@@ -24,8 +24,12 @@ def safe_auc(metric, y, p):
     except Exception: return None
 
 def main():
-    df=pd.read_csv(ROOT/'data/raw/disease_risk_dataset.csv')
-    run_audit()
+    raw_path = ROOT / 'data/raw/real_nhanes_nutraceutical.csv'
+    if not raw_path.exists():
+        raw_path = ROOT / 'data/raw/disease_risk_dataset.csv'
+    print(f"Training on dataset: {raw_path.name}")
+    df = pd.read_csv(raw_path)
+    run_audit(csv_path=raw_path)
     (ROOT/'models').mkdir(exist_ok=True)
     (ROOT/'reports/figures').mkdir(parents=True,exist_ok=True)
     (ROOT/'reports/metrics').mkdir(parents=True,exist_ok=True)
