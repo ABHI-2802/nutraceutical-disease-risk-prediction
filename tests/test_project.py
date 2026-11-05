@@ -46,4 +46,18 @@ def test_vercel_entrypoint_exports():
     assert hasattr(app_module, "app")
     assert hasattr(app_module, "application")
     assert hasattr(app_module, "handler")
-    assert callable(app_module.handler) or isinstance(app_module.handler, type)
+
+    import index as index_module
+    assert hasattr(index_module, "app")
+    assert hasattr(index_module, "application")
+    assert hasattr(index_module, "handler")
+
+    from api import index as api_index_module
+    assert hasattr(api_index_module, "app")
+    assert hasattr(api_index_module, "application")
+    assert hasattr(api_index_module, "handler")
+
+    from api import predict as api_predict_module
+    assert hasattr(api_predict_module, "app")
+    assert hasattr(api_predict_module, "application")
+    assert hasattr(api_predict_module, "handler")

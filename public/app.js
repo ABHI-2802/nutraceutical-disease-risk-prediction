@@ -260,11 +260,20 @@ async function runPrediction() {
   if (btn) btn.innerHTML = `<span>⏳ Evaluating...</span>`;
 
   try {
-    const res = await fetch("/api/predict", {
+    let res = await fetch("/api/predict", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(profile)
     });
+
+    if (!res.ok) {
+      // Fallback endpoint if /api/predict is routed as /api/index
+      res = await fetch("/api/index", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile)
+      });
+    }
 
     if (res.ok) {
       const data = await res.json();
