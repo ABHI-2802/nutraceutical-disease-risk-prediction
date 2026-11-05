@@ -5,7 +5,6 @@ Exports 'app', 'application', and 'handler' to satisfy all Vercel serverless spe
 import sys
 from pathlib import Path
 
-# Add project root to sys.path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 

@@ -1,8 +1,2 @@
-pandas==2.2.3
-numpy==2.2.6
-scikit-learn==1.6.1
-matplotlib>=3.7
-seaborn>=0.13
-joblib==1.5.1
-streamlit>=1.30
-xgboost>=2.0.0
+# Lightweight runtime for Vercel Serverless deployment
+# For model training & data pipelines: pip install -r requirements-dev.txt

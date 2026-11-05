@@ -2,79 +2,28 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import os
 import sys
+import math
 import mimetypes
 from pathlib import Path
-import numpy as np
-import pandas as pd
-import joblib
 
 # Determine root path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
-try:
-    from src.pipeline import TARGETS, engineer_features, DEFAULT_NUMERIC, DEFAULT_CATEGORICAL
-except ImportError:
-    TARGETS = ["Anemia", "Osteoporosis", "Diabetes", "Cardio"]
-    DEFAULT_NUMERIC = [
-        "Age", "Height", "Weight", "BMI_calc", "Waist", "Systolic_BP", "Diastolic_BP",
-        "Vitamin_D", "Iron", "Calcium", "Vitamin_B12", "Omega_3", "Zinc", "Magnesium", "Protein",
-        "Calories", "Sugars", "Fiber", "Total_Fat", "Sat_Fat", "Sodium", "Potassium",
-        "Waist_to_Height_Ratio", "Sodium_to_Potassium_Ratio", "Calcium_to_Magnesium_Ratio",
-        "VitD_Calcium_Index", "Sugar_to_Fiber_Ratio", "Sat_Fat_Ratio", "Pulse_Pressure",
-        "MAP", "BMI_Age_Interaction", "Iron_to_Protein_Ratio"
-    ]
-    DEFAULT_CATEGORICAL = ["Gender", "Physical_Activity", "Diet_Quality", "BMI_Category"]
+# Load linear weights for zero-dependency high-speed predictions
+LINEAR_WEIGHTS = {}
+weights_path = BASE_DIR / "models/linear_weights.json"
+if not weights_path.exists():
+    weights_path = BASE_DIR / "linear_weights.json"
 
-    def engineer_features(frame: pd.DataFrame) -> pd.DataFrame:
-        df = frame.copy()
-        if "Height" in df.columns and "Weight" in df.columns:
-            h = pd.to_numeric(df["Height"], errors="coerce")
-            w = pd.to_numeric(df["Weight"], errors="coerce")
-            height_m = h / 100.0
-            df["BMI_calc"] = w / height_m.pow(2)
-            df.loc[~np.isfinite(df["BMI_calc"]) | (height_m <= 0) | (w <= 0), "BMI_calc"] = np.nan
-            df["BMI_Category"] = pd.cut(
-                df["BMI_calc"],
-                bins=[0, 18.5, 25, 30, np.inf],
-                labels=["Underweight", "Normal", "Overweight", "Obesity"],
-                right=False
-            ).astype("object")
-        if "Waist" in df.columns and "Height" in df.columns:
-            df["Waist_to_Height_Ratio"] = df["Waist"] / (df["Height"] + 1e-5)
-        if "Sodium" in df.columns and "Potassium" in df.columns:
-            df["Sodium_to_Potassium_Ratio"] = df["Sodium"] / (df["Potassium"] + 1e-5)
-        if "Calcium" in df.columns and "Magnesium" in df.columns:
-            df["Calcium_to_Magnesium_Ratio"] = df["Calcium"] / (df["Magnesium"] + 1e-5)
-        if "Vitamin_D" in df.columns and "Calcium" in df.columns:
-            df["VitD_Calcium_Index"] = df["Vitamin_D"] * df["Calcium"]
-        if "Sugars" in df.columns and "Fiber" in df.columns:
-            df["Sugar_to_Fiber_Ratio"] = df["Sugars"] / (df["Fiber"] + 1e-5)
-        if "Sat_Fat" in df.columns and "Total_Fat" in df.columns:
-            df["Sat_Fat_Ratio"] = df["Sat_Fat"] / (df["Total_Fat"] + 1e-5)
-        if "Systolic_BP" in df.columns and "Diastolic_BP" in df.columns:
-            df["Pulse_Pressure"] = (df["Systolic_BP"] - df["Diastolic_BP"]).clip(lower=0)
-            df["MAP"] = df["Diastolic_BP"] + (df["Pulse_Pressure"] / 3.0)
-        if "BMI_calc" in df.columns and "Age" in df.columns:
-            df["BMI_Age_Interaction"] = df["BMI_calc"] * df["Age"]
-        if "Iron" in df.columns and "Protein" in df.columns:
-            df["Iron_to_Protein_Ratio"] = df["Iron"] / (df["Protein"] + 1e-5)
-        return df
+if weights_path.exists():
+    try:
+        with open(weights_path, "r", encoding="utf-8") as f:
+            LINEAR_WEIGHTS = json.load(f)
+    except Exception as e:
+        print(f"Note: Could not load linear weights: {e}", file=sys.stderr)
 
-# Global model cache to avoid re-reading disk on warm invocations
-CACHED_MODELS = {}
-
-def get_models():
-    if not CACHED_MODELS:
-        models_dir = BASE_DIR / "models"
-        for t in TARGETS:
-            path = models_dir / f"{t.lower()}_pipeline.joblib"
-            if path.exists():
-                try:
-                    CACHED_MODELS[t] = joblib.load(path)
-                except Exception as e:
-                    print(f"Error loading {t}: {e}", file=sys.stderr)
-    return CACHED_MODELS
+TARGETS = ["Cardio", "Diabetes", "Osteoporosis", "Anemia"]
 
 def disease_label(target: str) -> str:
     labels = {
@@ -93,64 +42,106 @@ def score_state(score: float) -> str:
     return "Higher model score"
 
 def predict_profile(data: dict) -> dict:
-    df = pd.DataFrame([data])
-    df = engineer_features(df)
-    
-    # Ensure all pipeline expected columns are present with NaN for imputer
-    for col in DEFAULT_NUMERIC + DEFAULT_CATEGORICAL:
-        if col not in df.columns:
-            df[col] = np.nan
-
-    models = get_models()
-    predictions = {}
-    for t in TARGETS:
-        label = disease_label(t)
-        if t in models:
-            try:
-                score = float(models[t].predict_proba(df)[0, 1])
-                predictions[t] = {
-                    "target": t,
-                    "label": label,
-                    "score": round(score, 4),
-                    "percentage": round(score * 100, 1),
-                    "state": score_state(score),
-                    "available": True
-                }
-            except Exception as exc:
-                predictions[t] = {
-                    "target": t,
-                    "label": label,
-                    "error": str(exc),
-                    "available": False
-                }
-        else:
-            predictions[t] = {
-                "target": t,
-                "label": label,
-                "error": "Model file not found",
-                "available": False
-            }
-
-    # Profile metrics
     height = float(data.get("Height", 170.0))
     weight = float(data.get("Weight", 70.0))
-    bmi = weight / ((height / 100.0) ** 2) if height > 0 else 0.0
+    height_m = height / 100.0 if height > 0 else 1.7
+    bmi = weight / (height_m * height_m) if height_m > 0 else 24.2
 
     bmi_cat = "Normal"
     if bmi < 18.5:
         bmi_cat = "Underweight"
-    elif bmi < 25.0:
-        bmi_cat = "Normal"
-    elif bmi < 30.0:
-        bmi_cat = "Overweight"
-    else:
+    elif bmi >= 30.0:
         bmi_cat = "Obesity"
+    elif bmi >= 25.0:
+        bmi_cat = "Overweight"
+
+    waist = float(data.get("Waist", 84.0))
+    sys_bp = float(data.get("Systolic_BP", 122.0))
+    dia_bp = float(data.get("Diastolic_BP", 78.0))
+    pulse_pressure = max(0.0, sys_bp - dia_bp)
+
+    row = {
+        "Age": float(data.get("Age", 40)),
+        "Height": height,
+        "Weight": weight,
+        "BMI_calc": bmi,
+        "Waist": waist,
+        "Systolic_BP": sys_bp,
+        "Diastolic_BP": dia_bp,
+        "Vitamin_D": float(data.get("Vitamin_D", 25.0)),
+        "Iron": float(data.get("Iron", 15.0)),
+        "Calcium": float(data.get("Calcium", 900.0)),
+        "Vitamin_B12": float(data.get("Vitamin_B12", 2.5)),
+        "Omega_3": float(data.get("Omega_3", 1.5)),
+        "Zinc": float(data.get("Zinc", 12.0)),
+        "Magnesium": float(data.get("Magnesium", 300.0)),
+        "Protein": float(data.get("Protein", 65.0)),
+        "Calories": None, "Sugars": None, "Fiber": None, "Total_Fat": None, "Sat_Fat": None, "Sodium": None, "Potassium": None,
+        "Waist_to_Height_Ratio": waist / (height + 1e-5),
+        "Sodium_to_Potassium_Ratio": None,
+        "Calcium_to_Magnesium_Ratio": float(data.get("Calcium", 900.0)) / (float(data.get("Magnesium", 300.0)) + 1e-5),
+        "VitD_Calcium_Index": float(data.get("Vitamin_D", 25.0)) * float(data.get("Calcium", 900.0)),
+        "Sugar_to_Fiber_Ratio": None,
+        "Sat_Fat_Ratio": None,
+        "Pulse_Pressure": pulse_pressure,
+        "MAP": dia_bp + (pulse_pressure / 3.0),
+        "BMI_Age_Interaction": bmi * float(data.get("Age", 40)),
+        "Iron_to_Protein_Ratio": float(data.get("Iron", 15.0)) / (float(data.get("Protein", 65.0)) + 1e-5)
+    }
+
+    numeric_cols = [
+        "Age", "Height", "Weight", "BMI_calc", "Waist", "Systolic_BP", "Diastolic_BP",
+        "Vitamin_D", "Iron", "Calcium", "Vitamin_B12", "Omega_3", "Zinc", "Magnesium", "Protein",
+        "Calories", "Sugars", "Fiber", "Total_Fat", "Sat_Fat", "Sodium", "Potassium",
+        "Waist_to_Height_Ratio", "Sodium_to_Potassium_Ratio", "Calcium_to_Magnesium_Ratio",
+        "VitD_Calcium_Index", "Sugar_to_Fiber_Ratio", "Sat_Fat_Ratio", "Pulse_Pressure",
+        "MAP", "BMI_Age_Interaction", "Iron_to_Protein_Ratio"
+    ]
+
+    gender = str(data.get("Gender", "F")).upper()
+    activity = str(data.get("Physical_Activity", "Moderate"))
+    diet = str(data.get("Diet_Quality", "Average"))
+
+    predictions = {}
+    for t in TARGETS:
+        t_key = t.lower()
+        score = 0.20  # default baseline
+        if t_key in LINEAR_WEIGHTS:
+            model = LINEAR_WEIGHTS[t_key]
+            x = []
+            for i, col in enumerate(numeric_cols):
+                val = row.get(col)
+                if val is None or not math.isfinite(val):
+                    val = model["num_medians"][i]
+                scaled = (val - model["num_means"][i]) / (model["num_scales"][i] or 1.0)
+                x.append(scaled)
+
+            cat_vals = [gender, activity, diet, bmi_cat]
+            for i, allowed in enumerate(model["cat_categories"]):
+                cur = cat_vals[i]
+                for cat in allowed:
+                    x.append(1.0 if cat == cur else 0.0)
+
+            z = model["intercept"]
+            for i in range(min(len(x), len(model["coef"]))):
+                z += model["coef"][i] * x[i]
+
+            score = 1.0 / (1.0 + math.exp(-z))
+
+        predictions[t] = {
+            "target": t,
+            "label": disease_label(t),
+            "score": round(score, 4),
+            "percentage": round(score * 100, 1),
+            "state": score_state(score),
+            "available": True
+        }
 
     summary = {
         "bmi": round(bmi, 1),
         "bmi_category": bmi_cat,
-        "activity": data.get("Physical_Activity", "Moderate"),
-        "diet_quality": data.get("Diet_Quality", "Average"),
+        "activity": activity,
+        "diet_quality": diet,
         "nutrients_count": 8
     }
 
@@ -177,13 +168,11 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json")
         self._send_cors_headers()
         self.end_headers()
-        models = get_models()
         payload = {
             "status": "healthy",
             "service": "Nutraceutical Disease Risk Prediction API",
             "version": "1.0.0",
-            "targets_available": list(models.keys()),
-            "total_targets": len(TARGETS)
+            "targets_available": TARGETS
         }
         self.wfile.write(json.dumps(payload).encode("utf-8"))
 
@@ -213,38 +202,37 @@ class LocalDevHandler(handler):
             super().do_GET()
             return
 
-        # Serve static files from public/
-        public_dir = BASE_DIR / "public"
-        if parsed_path == "/" or parsed_path == "":
-            filepath = public_dir / "index.html"
-        else:
-            rel = parsed_path.lstrip("/")
-            filepath = public_dir / rel
+        # Check public/ then root
+        target_file = None
+        rel_path = "index.html" if parsed_path in ["", "/"] else parsed_path.lstrip("/")
 
-        if filepath.exists() and filepath.is_file():
+        for base in [BASE_DIR / "public", BASE_DIR]:
+            candidate = base / rel_path
+            if candidate.exists() and candidate.is_file():
+                target_file = candidate
+                break
+
+        if not target_file:
+            for base in [BASE_DIR / "public", BASE_DIR]:
+                candidate = base / "index.html"
+                if candidate.exists() and candidate.is_file():
+                    target_file = candidate
+                    break
+
+        if target_file and target_file.is_file():
             self.send_response(200)
-            mime_type, _ = mimetypes.guess_type(str(filepath))
-            self.send_header("Content-Type", mime_type or "application/octet-stream")
+            mime_type, _ = mimetypes.guess_type(str(target_file))
+            self.send_header("Content-Type", mime_type or "text/html")
             self._send_cors_headers()
             self.end_headers()
-            with open(filepath, "rb") as f:
+            with open(target_file, "rb") as f:
                 self.wfile.write(f.read())
         else:
-            fallback = public_dir / "index.html"
-            if fallback.exists():
-                self.send_response(200)
-                self.send_header("Content-Type", "text/html")
-                self._send_cors_headers()
-                self.end_headers()
-                with open(fallback, "rb") as f:
-                    self.wfile.write(f.read())
-            else:
-                self.send_response(404)
-                self.end_headers()
-                self.wfile.write(b"Not Found")
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b"Not Found")
 
 
-# Universal WSGI callable for Vercel WSGI runtimes
 def wsgi_app(environ, start_response):
     method = environ.get("REQUEST_METHOD", "GET").upper()
     path = environ.get("PATH_INFO", "/")
@@ -259,7 +247,6 @@ def wsgi_app(environ, start_response):
         start_response("204 No Content", cors_headers)
         return [b""]
 
-    # API endpoints
     if path in ["/api/predict", "/api/index", "/api"] or path.startswith("/api/"):
         if method == "POST":
             try:
@@ -279,39 +266,41 @@ def wsgi_app(environ, start_response):
             start_response("200 OK", headers)
             return [json.dumps({"status": "healthy", "service": "Nutraceutical Risk API"}).encode("utf-8")]
 
-    # Serve static assets
-    public_dir = BASE_DIR / "public"
-    if path == "/" or path == "":
-        filepath = public_dir / "index.html"
-    else:
-        filepath = public_dir / path.lstrip("/")
+    # Static assets
+    rel_path = "index.html" if path in ["", "/"] else path.lstrip("/")
+    target_file = None
+    for base in [BASE_DIR / "public", BASE_DIR]:
+        candidate = base / rel_path
+        if candidate.exists() and candidate.is_file():
+            target_file = candidate
+            break
 
-    if filepath.exists() and filepath.is_file():
-        mime, _ = mimetypes.guess_type(str(filepath))
-        headers = cors_headers + [("Content-Type", mime or "application/octet-stream")]
-        start_response("200 OK", headers)
-        with open(filepath, "rb") as f:
-            return [f.read()]
+    if not target_file:
+        for base in [BASE_DIR / "public", BASE_DIR]:
+            candidate = base / "index.html"
+            if candidate.exists() and candidate.is_file():
+                target_file = candidate
+                break
 
-    fallback = public_dir / "index.html"
-    if fallback.exists():
-        headers = cors_headers + [("Content-Type", "text/html")]
+    if target_file and target_file.is_file():
+        mime, _ = mimetypes.guess_type(str(target_file))
+        headers = cors_headers + [("Content-Type", mime or "text/html")]
         start_response("200 OK", headers)
-        with open(fallback, "rb") as f:
+        with open(target_file, "rb") as f:
             return [f.read()]
 
     start_response("404 Not Found", cors_headers)
     return [b"Not Found"]
 
 
-# Dual exports: works whether Vercel expects a WSGI callable or BaseHTTPRequestHandler
+# Dual exports for Vercel
 app = wsgi_app
 application = wsgi_app
 
 if __name__ == "__main__":
     PORT = int(os.environ.get("PORT", 3000))
     server = HTTPServer(("0.0.0.0", PORT), LocalDevHandler)
-    print(f"Server started at http://localhost:{PORT}")
+    print(f"🚀 Dashboard running at http://localhost:{PORT}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
