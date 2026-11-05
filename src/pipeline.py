@@ -97,5 +97,7 @@ def features_for_target(frame: pd.DataFrame, target: str) -> pd.DataFrame:
     if target not in TARGETS:
         raise ValueError(f"Unknown target: {target}")
     df = engineer_features(frame)
-    num, cat = get_feature_lists(df)
-    return df[num + cat].copy()
+    for col in DEFAULT_NUMERIC + DEFAULT_CATEGORICAL:
+        if col not in df.columns:
+            df[col] = np.nan
+    return df[DEFAULT_NUMERIC + DEFAULT_CATEGORICAL].copy()

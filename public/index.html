@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nutraceutical Health Intelligence | Multi-Disease Risk Prediction Dashboard</title>
+  <meta name="description" content="CDC NHANES-trained multi-disease prediction dashboard for Anemia, Osteoporosis, Type 2 Diabetes, and Cardiovascular Disease.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧬</text></svg>">
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Top Hero Section -->
+    <header class="header-hero">
+      <div class="eyebrow-container">
+        <span class="eyebrow">🧬 RESEARCH PROTOTYPE · MULTI-DISEASE ML</span>
+        <span class="status-pill" id="api-status-badge"><span class="dot"></span> Vercel Engine Ready</span>
+        <span class="eyebrow" style="background: rgba(139, 92, 246, 0.12); color: #c4b5fd; border-color: rgba(167, 139, 250, 0.28);">CDC NHANES (N = 5,073)</span>
+      </div>
+
+      <h1 class="hero-title">Nutraceutical Health Intelligence</h1>
+      <p class="hero-desc">
+        Explore how demographic, lifestyle, physical measurements, and 24-hour nutraceutical intake 
+        translate into multi-disease machine learning risk scores. Powered by scikit-learn & XGBoost ensembles.
+      </p>
+
+      <!-- Quick Preset Profiles -->
+      <div class="presets-bar">
+        <span class="presets-label">Quick Presets:</span>
+        <button class="preset-btn" data-preset="default">🌟 Balanced Adult (40y)</button>
+        <button class="preset-btn" data-preset="cardio">❤️ High Cardio Risk (58y M)</button>
+        <button class="preset-btn" data-preset="anemia">🩸 Anemia / Iron Deficient (26y F)</button>
+        <button class="preset-btn" data-preset="osteo">🦴 Osteoporosis Risk (68y F)</button>
+        <button class="preset-btn" data-preset="optimal">🍏 Optimal Athlete (32y M)</button>
+      </div>
+    </header>
+
+    <!-- Academic Disclaimer -->
+    <div class="disclaimer-box">
+      <strong>Important Research Disclaimer:</strong> This application is an educational and academic portfolio research prototype.
+      The model scores generated reflect statistical patterns in CDC survey cohorts and <em>must not</em> be interpreted as formal medical diagnoses, clinical risk probabilities, or therapeutic treatment advice.
+    </div>
+
+    <!-- Section 1: Health Profile Form -->
+    <section class="form-panel">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">1. Build Health Profile</h2>
+          <span class="section-subtitle">Adjust demographic, anthropometric, and dietary intake parameters</span>
+        </div>
+      </div>
+
+      <form id="profile-form">
+        <div class="form-grid">
+          
+          <!-- Column 1: Demographics & Body Metrics -->
+          <div class="form-column">
+            <div class="col-heading">👤 Demographics & Body Metrics</div>
+            
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="slider-age">Age</label>
+                <span class="unit-tag">years</span>
+              </div>
+              <div class="input-slider-wrap">
+                <input type="range" id="slider-age" min="18" max="100" value="40" step="1">
+                <input type="number" id="num-age" class="input-number" min="18" max="100" value="40">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="select-gender">Biological Sex</label>
+              </div>
+              <select id="select-gender">
+                <option value="F">Female (F)</option>
+                <option value="M">Male (M)</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="slider-height">Height</label>
+                <span class="unit-tag">cm</span>
+              </div>
+              <div class="input-slider-wrap">
+                <input type="range" id="slider-height" min="120" max="220" value="170" step="0.5">
+                <input type="number" id="num-height" class="input-number" min="120" max="220" value="170" step="0.5">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="slider-weight">Weight</label>
+                <span class="unit-tag">kg</span>
+              </div>
+              <div class="input-slider-wrap">
+                <input type="range" id="slider-weight" min="30" max="200" value="70" step="0.5">
+                <input type="number" id="num-weight" class="input-number" min="30" max="200" value="70" step="0.5">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="select-activity">Physical Activity Level</label>
+              </div>
+              <select id="select-activity">
+                <option value="Low">Low (Sedentary)</option>
+                <option value="Moderate" selected>Moderate</option>
+                <option value="High">High (Vigorous)</option>
+              </select>
+            </div>
+
+            <button type="button" id="toggle-advanced" class="preset-btn" style="margin-top: 6px;">
+              ➕ Show Clinical Vitals (Waist, Blood Pressure)
+            </button>
+
+            <!-- Advanced Vitals Accordion -->
+            <div id="advanced-vitals-section" style="display: none; flex-direction: column; gap: 14px; margin-top: 6px; padding: 12px; background: rgba(11,21,36,0.6); border-radius: 8px;">
+              <div class="field-group">
+                <div class="field-label-row">
+                  <label for="slider-waist">Waist Circumference</label>
+                  <span class="unit-tag">cm</span>
+                </div>
+                <div class="input-slider-wrap">
+                  <input type="range" id="slider-waist" min="50" max="160" value="84" step="1">
+                  <input type="number" id="num-waist" class="input-number" min="50" max="160" value="84">
+                </div>
+              </div>
+
+              <div class="field-group">
+                <div class="field-label-row">
+                  <label for="slider-sys">Systolic BP</label>
+                  <span class="unit-tag">mmHg</span>
+                </div>
+                <div class="input-slider-wrap">
+                  <input type="range" id="slider-sys" min="80" max="220" value="122" step="1">
+                  <input type="number" id="num-sys" class="input-number" min="80" max="220" value="122">
+                </div>
+              </div>
+
+              <div class="field-group">
+                <div class="field-label-row">
+                  <label for="slider-dia">Diastolic BP</label>
+                  <span class="unit-tag">mmHg</span>
+                </div>
+                <div class="input-slider-wrap">
+                  <input type="range" id="slider-dia" min="50" max="140" value="78" step="1">
+                  <input type="number" id="num-dia" class="input-number" min="50" max="140" value="78">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Diet & Core Nutrients -->
+          <div class="form-column">
+            <div class="col-heading">🥗 Diet & Core Micronutrients</div>
+            
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="select-diet">Overall Diet Quality</label>
+              </div>
+              <select id="select-diet">
+                <option value="Poor">Poor</option>
+                <option value="Average">Average</option>
+                <option value="Good" selected>Good</option>
+                <option value="Excellent">Excellent</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="slider-vitd">Vitamin D</label>
+                <span class="unit-tag">mcg/day (DR1TVD)</span>
+              </div>
+              <div class="input-slider-wrap">
+                <input type="range" id="slider-vitd" min="0" max="150" value="25" step="0.5">
+                <input type="number" id="num-vitd" class="input-number" min="0" max="150" value="25" step="0.5">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="slider-iron">Iron Intake</label>
+                <span class="unit-tag">mg/day (DR1TFE)</span>
+              </div>
+              <div class="input-slider-wrap">
+                <input type="range" id="slider-iron" min="0" max="80" value="15" step="0.5">
+                <input type="number" id="num-iron" class="input-number" min="0" max="80" value="15" step="0.5">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="slider-calcium">Calcium</label>
+                <span class="unit-tag">mg/day (DR1TCA)</span>
+              </div>
+              <div class="input-slider-wrap">
+                <input type="range" id="slider-calcium" min="0" max="2500" value="900" step="10">
+                <input type="number" id="num-calcium" class="input-number" min="0" max="2500" value="900" step="10">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="slider-b12">Vitamin B12</label>
+                <span class="unit-tag">mcg/day (DR1TB12)</span>
+              </div>
+              <div class="input-slider-wrap">
+                <input type="range" id="slider-b12" min="0" max="20" value="2.5" step="0.1">
+                <input type="number" id="num-b12" class="input-number" min="0" max="20" value="2.5" step="0.1">
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 3: Functional Nutrients -->
+          <div class="form-column">
+            <div class="col-heading">💊 Functional Nutrients & Protein</div>
+            
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="slider-omega">Omega-3 Fatty Acids</label>
+                <span class="unit-tag">g/day (DR1TPFAT)</span>
+              </div>
+              <div class="input-slider-wrap">
+                <input type="range" id="slider-omega" min="0" max="15" value="1.5" step="0.1">
+                <input type="number" id="num-omega" class="input-number" min="0" max="15" value="1.5" step="0.1">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="slider-zinc">Zinc</label>
+                <span class="unit-tag">mg/day (DR1TZN)</span>
+              </div>
+              <div class="input-slider-wrap">
+                <input type="range" id="slider-zinc" min="0" max="45" value="12" step="0.5">
+                <input type="number" id="num-zinc" class="input-number" min="0" max="45" value="12" step="0.5">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="slider-magnesium">Magnesium</label>
+                <span class="unit-tag">mg/day (DR1TMG)</span>
+              </div>
+              <div class="input-slider-wrap">
+                <input type="range" id="slider-magnesium" min="0" max="800" value="300" step="5">
+                <input type="number" id="num-magnesium" class="input-number" min="0" max="800" value="300" step="5">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label-row">
+                <label for="slider-protein">Dietary Protein</label>
+                <span class="unit-tag">g/day (DR1TPROT)</span>
+              </div>
+              <div class="input-slider-wrap">
+                <input type="range" id="slider-protein" min="0" max="250" value="65" step="1">
+                <input type="number" id="num-protein" class="input-number" min="0" max="250" value="65" step="1">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <label class="live-toggle">
+            <input type="checkbox" id="check-live" checked>
+            <span>Live Auto-Calculation (recalculate on input change)</span>
+          </label>
+          <button type="button" id="btn-submit" class="btn-primary">
+            <span>⚡ Generate Disease Model Scores</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Section 2: Summary Biomarkers -->
+    <section>
+      <div class="section-header">
+        <h2 class="section-title">2. Biomarker & Profile Summary</h2>
+      </div>
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">Body Mass Index (BMI)</div>
+          <div class="summary-value" id="sum-bmi-val">24.2</div>
+          <div class="summary-sub">
+            <span class="state-badge low" id="sum-bmi-cat">Normal weight</span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Physical Activity</div>
+          <div class="summary-value" id="sum-activity-val">Moderate</div>
+          <div class="summary-sub">Exercise engagement level</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Diet Quality</div>
+          <div class="summary-value" id="sum-diet-val">Good</div>
+          <div class="summary-sub">Nutritional self-assessment</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Nutritional Markers</div>
+          <div class="summary-value" id="sum-nutrients-val">8 / 8 Active</div>
+          <div class="summary-sub">Vitamins, minerals & macronutrients</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Disease Risk Model Outputs -->
+    <section>
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">3. Multi-Disease Model Risk Scores</h2>
+          <span class="section-subtitle">Positive-class probability outputs from independent disease estimators</span>
+        </div>
+      </div>
+
+      <div class="results-grid">
+        
+        <!-- Cardiovascular Disease Card -->
+        <div class="disease-card">
+          <div class="card-top">
+            <div class="card-title-group">
+              <span class="disease-icon">❤️</span>
+              <span class="disease-name">Cardiovascular</span>
+              <span class="disease-algo">LogisticRegression (AUC: 0.804)</span>
+            </div>
+            <span class="state-badge low" id="state-cardio">Lower model score</span>
+          </div>
+          <div class="score-display" id="score-cardio">25.6%</div>
+          <div class="meter-bg">
+            <div class="meter-fill low" id="bar-cardio" style="width: 25.6%;"></div>
+          </div>
+          <div class="card-footer-info">
+            <span>Optimal Cutoff: 0.61</span>
+            <span>Test Prev: 12.2%</span>
+          </div>
+        </div>
+
+        <!-- Type 2 Diabetes Card -->
+        <div class="disease-card">
+          <div class="card-top">
+            <div class="card-title-group">
+              <span class="disease-icon">🩸</span>
+              <span class="disease-name">Type 2 Diabetes</span>
+              <span class="disease-algo">ExtraTrees Ensemble (AUC: 0.777)</span>
+            </div>
+            <span class="state-badge low" id="state-diabetes">Lower model score</span>
+          </div>
+          <div class="score-display" id="score-diabetes">11.4%</div>
+          <div class="meter-bg">
+            <div class="meter-fill low" id="bar-diabetes" style="width: 11.4%;"></div>
+          </div>
+          <div class="card-footer-info">
+            <span>Optimal Cutoff: 0.33</span>
+            <span>Test Prev: 16.4%</span>
+          </div>
+        </div>
+
+        <!-- Osteoporosis Card -->
+        <div class="disease-card">
+          <div class="card-top">
+            <div class="card-title-group">
+              <span class="disease-icon">🦴</span>
+              <span class="disease-name">Osteoporosis</span>
+              <span class="disease-algo">LogisticRegression (AUC: 0.778)</span>
+            </div>
+            <span class="state-badge low" id="state-osteo">Lower model score</span>
+          </div>
+          <div class="score-display" id="score-osteo">29.3%</div>
+          <div class="meter-bg">
+            <div class="meter-fill low" id="bar-osteo" style="width: 29.3%;"></div>
+          </div>
+          <div class="card-footer-info">
+            <span>Optimal Cutoff: 0.49</span>
+            <span>Test Prev: 30.2%</span>
+          </div>
+        </div>
+
+        <!-- Anemia Card -->
+        <div class="disease-card">
+          <div class="card-top">
+            <div class="card-title-group">
+              <span class="disease-icon">🔬</span>
+              <span class="disease-name">Anemia</span>
+              <span class="disease-algo">ExtraTrees Ensemble (AUC: 0.651)</span>
+            </div>
+            <span class="state-badge low" id="state-anemia">Lower model score</span>
+          </div>
+          <div class="score-display" id="score-anemia">13.6%</div>
+          <div class="meter-bg">
+            <div class="meter-fill low" id="bar-anemia" style="width: 13.6%;"></div>
+          </div>
+          <div class="card-footer-info">
+            <span>Optimal Cutoff: 0.11</span>
+            <span>Test Prev: 5.2%</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section 4: Holdout Benchmark Reference Table -->
+    <section class="benchmark-card">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">📊 Isolated Holdout Test Set Benchmark Reference (N = 1,015 Adults)</h2>
+          <span class="section-subtitle">Real-world performance evaluated against 20% stratified holdout test cohort</span>
+        </div>
+      </div>
+      
+      <div class="benchmark-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Disease Target</th>
+              <th>Selected Model</th>
+              <th>Optimal Cutoff</th>
+              <th>Holdout Accuracy</th>
+              <th>Recall (Sensitivity)</th>
+              <th>Holdout ROC-AUC</th>
+              <th>Holdout PR-AUC</th>
+              <th>Current Profile Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Cardiovascular Disease</strong></td>
+              <td><code>LogisticRegression</code></td>
+              <td>0.61</td>
+              <td>77.6%</td>
+              <td>66.9%</td>
+              <td><strong>0.804</strong></td>
+              <td>0.343</td>
+              <td id="table-val-cardio">25.6%</td>
+            </tr>
+            <tr>
+              <td><strong>Type 2 Diabetes</strong></td>
+              <td><code>ExtraTrees</code></td>
+              <td>0.33</td>
+              <td>74.4%</td>
+              <td>61.4%</td>
+              <td><strong>0.777</strong></td>
+              <td>0.350</td>
+              <td id="table-val-diabetes">11.4%</td>
+            </tr>
+            <tr>
+              <td><strong>Osteoporosis</strong></td>
+              <td><code>LogisticRegression</code></td>
+              <td>0.49</td>
+              <td>69.6%</td>
+              <td>77.2%</td>
+              <td><strong>0.778</strong></td>
+              <td>0.561</td>
+              <td id="table-val-osteo">29.3%</td>
+            </tr>
+            <tr>
+              <td><strong>Anemia</strong></td>
+              <td><code>ExtraTrees</code></td>
+              <td>0.11</td>
+              <td>59.2%</td>
+              <td>64.2%</td>
+              <td><strong>0.651</strong></td>
+              <td>0.075</td>
+              <td id="table-val-anemia">13.6%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 5: EXACT REQUIRED LIMITATIONS AT THE BOTTOM -->
+    <section class="limitations-panel">
+      <div class="limitations-header">
+        <span class="limitations-badge">⚠️ Critical Caveats</span>
+        <h3 class="limitations-title">Model Limitations & Clinical Scope</h3>
+      </div>
+      <ol class="limitations-list">
+        <li class="limitations-item">
+          <span class="lim-number">1</span>
+          <div>
+            <strong>Measurement variability:</strong> Stress, caffeine, exercise and measurement technique can alter readings and affect model scores.
+          </div>
+        </li>
+        <li class="limitations-item">
+          <span class="lim-number">2</span>
+          <div>
+            <strong>Input uncertainty:</strong> Inaccurate dietary estimates, incorrect units or confusion with blood-test values can affect predictions.
+          </div>
+        </li>
+        <li class="limitations-item">
+          <span class="lim-number">3</span>
+          <div>
+            <strong>Incomplete medical context:</strong> The model does not fully account for symptoms, medications, family history and clinical examination findings.
+          </div>
+        </li>
+        <li class="limitations-item">
+          <span class="lim-number">4</span>
+          <div>
+            <strong>Limited validation:</strong> Trained on U.S. adult data, the model remains unvalidated for Indian populations and provides research scores rather than diagnoses.
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div>Nutraceutical Disease Risk Prediction · Vercel Production Dashboard</div>
+      <div>Trained on real CDC NHANES epidemiological survey data (2017–2018 Cycle, N = 5,073). Designed for academic research, education, and portfolio demonstration.</div>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

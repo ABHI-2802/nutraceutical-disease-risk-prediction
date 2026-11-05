@@ -89,30 +89,30 @@ python -m src.train
 
 ---
 
-## 🚀 How to Deploy on Render (Step-by-Step)
+## 🚀 How to Deploy on Vercel (Production Web Dashboard)
 
-Host this application live on **Render** (free web service tier) so it can be accessed from any device.
+Deploy this interactive health intelligence dashboard to **Vercel** with global Edge CDN and Python Serverless API.
 
-### Render Deployment Instructions:
-1. Sign up or log into **[Render.com](https://render.com/)**.
-2. Click **New +** → Select **Web Service**.
-3. Select your repository: `ABHI-2802/nutraceutical-disease-risk-prediction`.
-4. Configure settings:
-   - **Runtime:** `Python 3`
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:**
-     ```bash
-     streamlit run app.py --server.port $PORT --server.address 0.0.0.0
-     ```
-   - **Instance Type:** Free
-5. Click **Deploy Web Service**.
+### Vercel Deployment Instructions:
+1. Push your changes to your GitHub repository:
+   ```bash
+   git add .
+   git commit -m "feat: add Vercel dashboard and serverless prediction API"
+   git push origin main
+   ```
+2. Log in to **[Vercel](https://vercel.com/)**.
+3. Click **Add New...** → **Project** and select your repository: `ABHI-2802/nutraceutical-disease-risk-prediction`.
+4. Leave the root directory and build settings as default (Vercel automatically detects `vercel.json`, `public/`, and `api/predict.py`).
+5. Click **Deploy**. Your dashboard will be live at `https://<your-project>.vercel.app` in under a minute!
 
 ---
 
-## 💻 Local Quick Start (Mac/Linux)
+## 💻 Local Quick Start (Vercel Dashboard & API)
+
+Run the exact Vercel dashboard locally with the built-in development server:
 
 ```bash
-# 1. Clone repository
+# 1. Clone repository & enter directory
 git clone https://github.com/ABHI-2802/nutraceutical-disease-risk-prediction.git
 cd nutraceutical-disease-risk-prediction
 
@@ -121,10 +121,18 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Download CDC NHANES data & train models
-python -m src.fetch_real_nhanes
-python -m src.train
-
-# 4. Launch Streamlit UI
-streamlit run app.py
+# 3. Launch Vercel Web Dashboard (serves public/ frontend and /api/predict)
+python3 api/predict.py
 ```
+Open **[http://localhost:3000](http://localhost:3000)** in your browser to view the interactive dashboard.
+
+---
+
+## ⚠️ Model Limitations & Clinical Scope
+
+The dashboard prominently documents the following limitations:
+1. **Measurement variability:** Stress, caffeine, exercise and measurement technique can alter readings and affect model scores.
+2. **Input uncertainty:** Inaccurate dietary estimates, incorrect units or confusion with blood-test values can affect predictions.
+3. **Incomplete medical context:** The model does not fully account for symptoms, medications, family history and clinical examination findings.
+4. **Limited validation:** Trained on U.S. adult data, the model remains unvalidated for Indian populations and provides research scores rather than diagnoses.
+
