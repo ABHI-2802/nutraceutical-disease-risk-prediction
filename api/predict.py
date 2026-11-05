@@ -1,27 +1,27 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
+"""
+Nutraceutical Disease Risk Prediction - Vercel Serverless Application Entrypoint
+Defines explicit top-level 'app' (WSGI), 'application' (WSGI), and 'handler' (HTTP).
+"""
 import json
-import os
-import sys
 import math
 import mimetypes
+import os
+import sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-# Determine root path
-BASE_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(BASE_DIR))
+BASE_DIR = Path(__file__).resolve().parent
 
-# Load linear weights for zero-dependency high-speed predictions
+# Load model weights for zero-dependency high-speed predictions
 LINEAR_WEIGHTS = {}
-weights_path = BASE_DIR / "models/linear_weights.json"
-if not weights_path.exists():
-    weights_path = BASE_DIR / "linear_weights.json"
-
-if weights_path.exists():
-    try:
-        with open(weights_path, "r", encoding="utf-8") as f:
-            LINEAR_WEIGHTS = json.load(f)
-    except Exception as e:
-        print(f"Note: Could not load linear weights: {e}", file=sys.stderr)
+for p in [BASE_DIR / "linear_weights.json", BASE_DIR / "models/linear_weights.json"]:
+    if p.exists():
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                LINEAR_WEIGHTS = json.load(f)
+            break
+        except Exception:
+            pass
 
 TARGETS = ["Cardio", "Diabetes", "Osteoporosis", "Anemia"]
 
@@ -105,7 +105,7 @@ def predict_profile(data: dict) -> dict:
     predictions = {}
     for t in TARGETS:
         t_key = t.lower()
-        score = 0.20  # default baseline
+        score = 0.20
         if t_key in LINEAR_WEIGHTS:
             model = LINEAR_WEIGHTS[t_key]
             x = []
@@ -152,34 +152,64 @@ def predict_profile(data: dict) -> dict:
     }
 
 
+def find_static_file(path: str) -> Path | None:
+    rel = "index.html" if path in ["", "/"] else path.lstrip("/")
+    for base in [BASE_DIR, BASE_DIR / "public"]:
+        candidate = base / rel
+        if candidate.exists() and candidate.is_file():
+            return candidate
+    for base in [BASE_DIR, BASE_DIR / "public"]:
+        fallback = base / "index.html"
+        if fallback.exists() and fallback.is_file():
+            return fallback
+    return None
+
+
+# EXPLICIT TOP-LEVEL CLASS DEF: handler (BaseHTTPRequestHandler)
 class handler(BaseHTTPRequestHandler):
-    def _send_cors_headers(self):
+    def _send_cors(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
     def do_OPTIONS(self):
         self.send_response(204)
-        self._send_cors_headers()
+        self._send_cors()
         self.end_headers()
 
     def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self._send_cors_headers()
-        self.end_headers()
-        payload = {
-            "status": "healthy",
-            "service": "Nutraceutical Disease Risk Prediction API",
-            "version": "1.0.0",
-            "targets_available": TARGETS
-        }
-        self.wfile.write(json.dumps(payload).encode("utf-8"))
+        parsed = self.path.split("?")[0]
+        if parsed.startswith("/api/"):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self._send_cors()
+            self.end_headers()
+            payload = {
+                "status": "healthy",
+                "service": "Nutraceutical Disease Risk Prediction API",
+                "version": "1.0.0",
+                "targets": TARGETS
+            }
+            self.wfile.write(json.dumps(payload).encode("utf-8"))
+            return
+
+        target = find_static_file(parsed)
+        if target:
+            self.send_response(200)
+            mime, _ = mimetypes.guess_type(str(target))
+            self.send_header("Content-Type", mime or "text/html")
+            self._send_cors()
+            self.end_headers()
+            with open(target, "rb") as f:
+                self.wfile.write(f.read())
+        else:
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b"Not Found")
 
     def do_POST(self):
         content_length = int(self.headers.get("Content-Length", 0))
         post_data = self.rfile.read(content_length)
-
         try:
             data = json.loads(post_data.decode("utf-8"))
             result = predict_profile(data)
@@ -190,61 +220,24 @@ class handler(BaseHTTPRequestHandler):
 
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json")
-        self._send_cors_headers()
+        self._send_cors()
         self.end_headers()
         self.wfile.write(json.dumps(result).encode("utf-8"))
 
 
-class LocalDevHandler(handler):
-    def do_GET(self):
-        parsed_path = self.path.split("?")[0]
-        if parsed_path.startswith("/api/"):
-            super().do_GET()
-            return
-
-        # Check public/ then root
-        target_file = None
-        rel_path = "index.html" if parsed_path in ["", "/"] else parsed_path.lstrip("/")
-
-        for base in [BASE_DIR / "public", BASE_DIR]:
-            candidate = base / rel_path
-            if candidate.exists() and candidate.is_file():
-                target_file = candidate
-                break
-
-        if not target_file:
-            for base in [BASE_DIR / "public", BASE_DIR]:
-                candidate = base / "index.html"
-                if candidate.exists() and candidate.is_file():
-                    target_file = candidate
-                    break
-
-        if target_file and target_file.is_file():
-            self.send_response(200)
-            mime_type, _ = mimetypes.guess_type(str(target_file))
-            self.send_header("Content-Type", mime_type or "text/html")
-            self._send_cors_headers()
-            self.end_headers()
-            with open(target_file, "rb") as f:
-                self.wfile.write(f.read())
-        else:
-            self.send_response(404)
-            self.end_headers()
-            self.wfile.write(b"Not Found")
-
-
-def wsgi_app(environ, start_response):
+# EXPLICIT TOP-LEVEL FUNCTION DEF: app (WSGI Callable)
+def app(environ, start_response):
     method = environ.get("REQUEST_METHOD", "GET").upper()
     path = environ.get("PATH_INFO", "/")
 
-    cors_headers = [
+    cors = [
         ("Access-Control-Allow-Origin", "*"),
         ("Access-Control-Allow-Methods", "GET, POST, OPTIONS"),
         ("Access-Control-Allow-Headers", "Content-Type, Authorization")
     ]
 
     if method == "OPTIONS":
-        start_response("204 No Content", cors_headers)
+        start_response("204 No Content", cors)
         return [b""]
 
     if path in ["/api/predict", "/api/index", "/api"] or path.startswith("/api/"):
@@ -258,49 +251,35 @@ def wsgi_app(environ, start_response):
             except Exception as e:
                 res = {"success": False, "error": str(e)}
                 status = "400 Bad Request"
-            headers = cors_headers + [("Content-Type", "application/json")]
+            headers = cors + [("Content-Type", "application/json")]
             start_response(status, headers)
             return [json.dumps(res).encode("utf-8")]
         else:
-            headers = cors_headers + [("Content-Type", "application/json")]
+            headers = cors + [("Content-Type", "application/json")]
             start_response("200 OK", headers)
             return [json.dumps({"status": "healthy", "service": "Nutraceutical Risk API"}).encode("utf-8")]
 
-    # Static assets
-    rel_path = "index.html" if path in ["", "/"] else path.lstrip("/")
-    target_file = None
-    for base in [BASE_DIR / "public", BASE_DIR]:
-        candidate = base / rel_path
-        if candidate.exists() and candidate.is_file():
-            target_file = candidate
-            break
-
-    if not target_file:
-        for base in [BASE_DIR / "public", BASE_DIR]:
-            candidate = base / "index.html"
-            if candidate.exists() and candidate.is_file():
-                target_file = candidate
-                break
-
-    if target_file and target_file.is_file():
-        mime, _ = mimetypes.guess_type(str(target_file))
-        headers = cors_headers + [("Content-Type", mime or "text/html")]
+    target = find_static_file(path)
+    if target:
+        mime, _ = mimetypes.guess_type(str(target))
+        headers = cors + [("Content-Type", mime or "text/html")]
         start_response("200 OK", headers)
-        with open(target_file, "rb") as f:
+        with open(target, "rb") as f:
             return [f.read()]
 
-    start_response("404 Not Found", cors_headers)
+    start_response("404 Not Found", cors)
     return [b"Not Found"]
 
 
-# Dual exports for Vercel
-app = wsgi_app
-application = wsgi_app
+# EXPLICIT TOP-LEVEL ASSIGNMENT: application (WSGI Alias)
+application = app
+
+__all__ = ["app", "application", "handler", "predict_profile"]
 
 if __name__ == "__main__":
-    PORT = int(os.environ.get("PORT", 3000))
-    server = HTTPServer(("0.0.0.0", PORT), LocalDevHandler)
-    print(f"🚀 Dashboard running at http://localhost:{PORT}")
+    port = int(os.environ.get("PORT", 3000))
+    server = HTTPServer(("0.0.0.0", port), handler)
+    print(f"🚀 Nutraceutical Dashboard running at http://localhost:{port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

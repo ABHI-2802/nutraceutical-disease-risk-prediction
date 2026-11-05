@@ -7,3 +7,4 @@ joblib==1.5.1
 streamlit>=1.30
 xgboost>=2.0.0
 pytest>=8.0.0
+

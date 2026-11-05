@@ -7,3 +7,4 @@ sql/
 *.joblib
 .pytest_cache/
 .DS_Store
+
