@@ -8,9 +8,9 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE_DIR))
 
-from api.predict import handler, app, application, predict_profile, LocalDevHandler
+from api.predict import handler, app, application, wsgi_app, predict_profile, LocalDevHandler
 
-__all__ = ["handler", "app", "application", "predict_profile", "LocalDevHandler"]
+__all__ = ["handler", "app", "application", "wsgi_app", "predict_profile", "LocalDevHandler"]
 
 if __name__ == "__main__":
     from http.server import HTTPServer

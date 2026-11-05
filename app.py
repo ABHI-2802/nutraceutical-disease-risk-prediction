@@ -10,14 +10,9 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE_DIR))
 
-from api.predict import handler, LocalDevHandler, predict_profile
+from api.predict import handler, app, application, wsgi_app, LocalDevHandler, predict_profile
 
-# Top-level exports for Vercel Python Runtime ([PYTHON_ENTRYPOINT_NOT_FOUND] resolution)
-handler = LocalDevHandler
-app = LocalDevHandler
-application = LocalDevHandler
-
-__all__ = ["app", "application", "handler", "predict_profile"]
+__all__ = ["app", "application", "handler", "wsgi_app", "predict_profile"]
 
 if __name__ == "__main__":
     from http.server import HTTPServer

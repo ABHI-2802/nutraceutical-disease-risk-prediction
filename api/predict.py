@@ -2,6 +2,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import os
 import sys
+import mimetypes
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -205,11 +206,6 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(result).encode("utf-8"))
 
 
-# Exports for Vercel Python runtime
-app = handler
-application = handler
-
-
 class LocalDevHandler(handler):
     def do_GET(self):
         parsed_path = self.path.split("?")[0]
@@ -217,7 +213,6 @@ class LocalDevHandler(handler):
             super().do_GET()
             return
 
-        import mimetypes
         # Serve static files from public/
         public_dir = BASE_DIR / "public"
         if parsed_path == "/" or parsed_path == "":
@@ -248,6 +243,70 @@ class LocalDevHandler(handler):
                 self.end_headers()
                 self.wfile.write(b"Not Found")
 
+
+# Universal WSGI callable for Vercel WSGI runtimes
+def wsgi_app(environ, start_response):
+    method = environ.get("REQUEST_METHOD", "GET").upper()
+    path = environ.get("PATH_INFO", "/")
+
+    cors_headers = [
+        ("Access-Control-Allow-Origin", "*"),
+        ("Access-Control-Allow-Methods", "GET, POST, OPTIONS"),
+        ("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    ]
+
+    if method == "OPTIONS":
+        start_response("204 No Content", cors_headers)
+        return [b""]
+
+    # API endpoints
+    if path in ["/api/predict", "/api/index", "/api"] or path.startswith("/api/"):
+        if method == "POST":
+            try:
+                length = int(environ.get("CONTENT_LENGTH", 0))
+                body = environ["wsgi.input"].read(length) if length > 0 else b"{}"
+                data = json.loads(body.decode("utf-8"))
+                res = predict_profile(data)
+                status = "200 OK"
+            except Exception as e:
+                res = {"success": False, "error": str(e)}
+                status = "400 Bad Request"
+            headers = cors_headers + [("Content-Type", "application/json")]
+            start_response(status, headers)
+            return [json.dumps(res).encode("utf-8")]
+        else:
+            headers = cors_headers + [("Content-Type", "application/json")]
+            start_response("200 OK", headers)
+            return [json.dumps({"status": "healthy", "service": "Nutraceutical Risk API"}).encode("utf-8")]
+
+    # Serve static assets
+    public_dir = BASE_DIR / "public"
+    if path == "/" or path == "":
+        filepath = public_dir / "index.html"
+    else:
+        filepath = public_dir / path.lstrip("/")
+
+    if filepath.exists() and filepath.is_file():
+        mime, _ = mimetypes.guess_type(str(filepath))
+        headers = cors_headers + [("Content-Type", mime or "application/octet-stream")]
+        start_response("200 OK", headers)
+        with open(filepath, "rb") as f:
+            return [f.read()]
+
+    fallback = public_dir / "index.html"
+    if fallback.exists():
+        headers = cors_headers + [("Content-Type", "text/html")]
+        start_response("200 OK", headers)
+        with open(fallback, "rb") as f:
+            return [f.read()]
+
+    start_response("404 Not Found", cors_headers)
+    return [b"Not Found"]
+
+
+# Dual exports: works whether Vercel expects a WSGI callable or BaseHTTPRequestHandler
+app = wsgi_app
+application = wsgi_app
 
 if __name__ == "__main__":
     PORT = int(os.environ.get("PORT", 3000))
